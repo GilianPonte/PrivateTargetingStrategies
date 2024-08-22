@@ -206,7 +206,7 @@ import tensorflow_privacy
 from tensorflow_privacy.privacy.optimizers.dp_optimizer_keras import DPKerasAdamOptimizer
 import keras_tuner
 
-def pcnn(X, Y, T, scaling=True, batch_size=100, epochs=100, max_epochs=1, directory="tuner", fixed_model = False, noise_multiplier= None):
+def pcnn(X, Y, T, scaling=True, batch_size=100, epochs=100, max_epochs=1, directory="tuner", fixed_model = False, noise_multiplier= None, seed = None):
     """
     Private Causal Neural Network (PCNN) algorithm for estimating average treatment effects.
 
