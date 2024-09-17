@@ -43,9 +43,9 @@ def protect_selection(epsilon, selection, top):
         protected_selection[np.random.choice(index_0, top - len(index), replace=False)] = 1
     elif top < len(index):
         # Sample everyone from index and set them to 1
-        protected_selection[np.random.choice(index, len(index), replace=False)] = 1
+        protected_selection[np.random.choice(index_1, len(index_1), replace=False)] = 1
         # Sample the remaining required elements to set to 0
-        protected_selection[np.random.choice(index, abs(top - len(index)), replace=False)] = 0
+        protected_selection[np.random.choice(index_1, abs(top - len(index_1)), replace=False)] = 0
     return protected_selection
 
 def policy_profit(data, bootstrap=False):
