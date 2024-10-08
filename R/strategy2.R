@@ -149,3 +149,79 @@ policy_profit = function(data, bootstrap = FALSE){
   }
   return(profit)
 }
+
+
+profit = function(epsilon, CATE, CATE_estimates, phi){
+  if (length(CATE) > 0){
+    N = length(CATE) 
+  }else{
+    N = length(CATE_estimates)
+  }
+  top = round(N * phi)
+
+  if(length(CATE) > 0){
+    sorted_indices = order(CATE, decreasing = TRUE)
+    selection = CATE >= CATE[sorted_indices[top]]
+  }else{
+    sorted_indices = order(CATE_estimates, decreasing = TRUE)
+    selection = CATE_estimates >= CATE_estimates[sorted_indices[top]]
+  }
+  
+  # for every row in the responses generate protected selection based on matrix above.
+  RR = rbinom(n = N, 1, 1 / (1 + exp(epsilon)))
+  selection[RR == 1] <- 1 - selection[RR == 1]
+  
+  # Find targeted and non-targeted indices after RR
+  who_is_targeted <- which(selection == 1)
+  who_is_not_targeted <- which(selection == 0)
+  targetRR_Nphi <- rep(0, N)
+  
+  if (round(phi * N) < length(who_is_targeted)) {
+    # If too many are targeted, randomly select a subset
+    random_select <- sample(who_is_targeted, size=round(phi * N), replace=FALSE)
+    targetRR_Nphi[random_select] <- 1
+  } else {
+    # If too few are targeted, add random non-targeted people
+    targetRR_Nphi[who_is_targeted] <- 1
+    random_select <- sample(who_is_not_targeted, size=round(phi * N) - length(who_is_targeted), replace=FALSE)
+    targetRR_Nphi[random_select] <- 1
+  }
+  
+  # Generate a random policy
+  randompolicy <- sample(N, round(phi * N))
+  randomtarget <- rep(0, N)
+  randomtarget[randompolicy] <- 1
+  
+  # Calculate the profit based on q
+  prof_random <- sum(CATE[randomtarget == 1])
+  empirical_profit = sum(CATE[targetRR_Nphi == 1])
+  return(empirical_profit - prof_random)
+}
+
+expected_profit = function(phi, lambda, epsilon, N){
+  pr <- exp(epsilon) / (1 + exp(epsilon))
+  Prof1 <- (1 - log(phi)) / lambda
+  Prof2 <- (phi * log(phi) + 1 - phi) / (lambda * (1 - phi))
+  
+  # Profit on the target group
+  Pi1 <- pr * N * phi * Prof1 + (1 - pr) * N * (1 - phi) * Prof2
+  # Profit on the not-target group
+  Pi2 <- (1 - pr) * N * phi * Prof1 + pr * N * (1 - phi) * Prof2
+  # People in the target group
+  N1 <- pr * N * phi + (1 - pr) * N * (1 - phi)
+  # People in the non-target group
+  N2 <- (1 - pr) * N * phi + pr * N * (1 - phi)
+  
+  # Theoretical profit
+  if (phi < 0.5) {
+    p <- (phi * N / N1) * Pi1
+    } else {
+    p <- Pi1 + (Pi2 * ((N * phi - N1) / N2))
+}
+return(p)
+}
+
+# Define the function after subtracting the random policy
+expected_profit_random <- function(phi, lambda, epsilon, N) {
+  return(expected_profit(phi, lambda, epsilon, N) - expected_profit(phi, lambda, epsilon = 0, N))
+}
