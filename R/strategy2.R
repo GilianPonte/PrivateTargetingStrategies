@@ -1,4 +1,5 @@
-protect_CATEs = function(percent, CATE, CATE_estimates, n, epsilons = c(0.05,0.5,1,3,5)){
+protect_CATEs = function(percent, CATE, CATE_estimates, n, epsilons = c(0.05,0.5,1,3,5), seed = 1){
+  set.seed(seed)
   top = floor(n * percent)
   selection_true = rep(0, n)
   selection_tau = rep(0, n)
@@ -25,7 +26,7 @@ protect_CATEs = function(percent, CATE, CATE_estimates, n, epsilons = c(0.05,0.5
   return(collection)
 }
 
-protect_selection = function(epsilon, selection, top, seed = 1){
+protect_selection = function(epsilon, selection, top){
   # privacy settings
   P = matrix(nrow = 2, ncol = 2)
   diag(P) = (exp(epsilon))/(2-1+exp(epsilon))
@@ -33,10 +34,8 @@ protect_selection = function(epsilon, selection, top, seed = 1){
   
   # get responses
   responses = rep(0,length(selection))
-  
   # for every row in the responses generate protected selection based on matrix above.
   for (i in 1:length(selection)){
-    set.seed(seed+i)
     responses[i] = ifelse(selection[i] == 0, sample(x = c(1:2)-1,size = 1,prob= P[1,]), sample(x = c(1:2)-1,size = 1,prob=P[2,]))
   }
   
